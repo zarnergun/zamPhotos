@@ -1,9 +1,12 @@
 package com.zam.photos
-import com.zam.photos.GetDataLogin
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import javax.security.auth.callback.Callback
 
 class MainActivity : AppCompatActivity() {
 
@@ -16,10 +19,18 @@ class MainActivity : AppCompatActivity() {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
-        val serviceJson = retroJson.create(HttpBinServiceJson::class.java)
-        val callJson = serviceJson.getLoginInfo()
-        callJson.enqueue(object: Callback<GetDataLogin>) {
-            
-        }
+        val serviceJson = retrofitJson.create(HttpBinServiceJson::class.java)
+        val callJson: Call<GetDataLogin> = serviceJson.getLoginInfo()
+
+        callJson.enqueue(object: Callback<GetDataLogin> {
+            override fun onResponse(call: Call<GetDataLogin>, response: Response<GetDataLogin>) {
+                Log.i("test", "Contenu : ${response.body()}");
+            }
+
+            override fun onFailure(call: Call<GetDataLogin>, t: Throwable) {
+                Log.i("erreur", "Contenu : ${t}");
+            }
+
+        })
     }
 }

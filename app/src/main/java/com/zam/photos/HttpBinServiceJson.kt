@@ -5,7 +5,7 @@ import retrofit2.http.POST
 
 interface HttpBinServiceJson {
 
-    @POST("post")
+    @POST("userLogin")
     fun getLoginInfo() : Call<GetDataLogin>
 
 }
