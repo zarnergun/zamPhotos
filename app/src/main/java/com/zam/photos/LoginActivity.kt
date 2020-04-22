@@ -6,7 +6,10 @@ import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
+import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_main.btn
+import kotlinx.android.synthetic.main.activity_main.textView
 import org.json.JSONObject
 
 class LoginActivity : AppCompatActivity()  {
@@ -22,8 +25,8 @@ class LoginActivity : AppCompatActivity()  {
             // Post parameters
             // Form fields and values
             val params = HashMap<String,String>()
-            params["pseudo"] = "test"
-            params["pass"] = "test"
+            params["pseudo"] = pseudoInput.text.toString()
+            params["pass"] = passwordInput.text.toString()
             val jsonObject = JSONObject(params as Map<*, *>)
 
             // Volley post request with parameters
