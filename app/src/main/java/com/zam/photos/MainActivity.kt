@@ -6,7 +6,7 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
-import kotlinx.android.synthetic.main.activity_main.*
+import com.zam.photos.R.menu.menu_main
 
 
 class MainActivity : AppCompatActivity() {
@@ -17,30 +17,32 @@ class MainActivity : AppCompatActivity() {
 
         var toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false);
 
-        fun onCreateOptionsMenu(menu: Menu?): Boolean {
-            menuInflater.inflate(R.menu.toolbarmain, menu)
-            return true
+
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId) {
+            R.id.goToLogin -> {
+                val database = Database(this)
+                val user = database.getUsersCount()
+                if(user > 0) {
+                    val intent = Intent(this, ProfileActivity::class.java)
+                    startActivity(intent)
+                }
+                else {
+                    val intent = Intent(this, LoginActivity::class.java)
+                    startActivity(intent)
+                }
+            }
         }
-
-        fun onOptionsItemSelected(item: MenuItem): Boolean {
-            return super.onOptionsItemSelected(item)
-        }
-
-        val database = Database(this)
-
-        val user = database.getUsersCount()
-
-        if(user > 0) {
-            button.text = "profil"
-            val intent = Intent(this, ProfileActivity::class.java)
-            startActivity(intent)
-        }
-        else {
-            button.text = "login"
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
-        }
+        return super.onOptionsItemSelected(item)
     }
 
 }

@@ -2,7 +2,9 @@ package com.zam.photos
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.Response
@@ -16,6 +18,9 @@ class LoginActivity : AppCompatActivity()  {
     override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             setContentView(R.layout.activity_login)
+
+        var toolbar = findViewById<Toolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
 
         val database = Database(this)
 
@@ -42,9 +47,16 @@ class LoginActivity : AppCompatActivity()  {
                             val pseudo = response["login"].toString()
                             val email = response["email"].toString()
                             val pic = response["pic"].toString()
+
+                            // ADD IN PREFERENCE PERSISTANT
+                            val store = Storage(this)
+                            store.saveString("pseudo", pseudo)
+                            store.saveString("email", email)
+                            store.saveString("pic", pic)
+                            //
                             database.createUser(User(pseudo,email,pic))
                             textView.text = "Ajouté en bdd"
-                            val intent = Intent(this, ProfileActivity::class.java)
+                            val intent = Intent(this, MainActivity::class.java)
                             startActivity(intent)
                             finish()
                         }
@@ -72,5 +84,9 @@ class LoginActivity : AppCompatActivity()  {
             VolleySingleton.getInstance(this).addToRequestQueue(request)
         }
 
+    }
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu);
+        return true
     }
 }

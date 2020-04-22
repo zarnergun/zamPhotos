@@ -25,6 +25,10 @@ SQLiteOpenHelper(context, "user.db", null, 1){
         writableDatabase.insert("users", null, values)
     }
 
+    fun getUserInfos(element : String) {
+
+    }
+
     fun cleanUser() {
         writableDatabase.delete("users", null,null)
     }

@@ -15,16 +15,17 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     app:titleTextColor="@android:color/white"
-    android:background="?attr/colorPrimary">
+    android:layout_gravity="center_horizontal"
+    android:background="?attr/colorPrimary" >
 
-</androidx.appcompat.widget.Toolbar>
-
-    <Button
-        android:id="@+id/button"
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="LOGIN"
-        tools:layout_editor_absoluteX="162dp"
-        tools:layout_editor_absoluteY="19dp"
-        tools:ignore="MissingConstraints" />
+        android:text="@string/app_name"
+        android:textColor="@android:color/white"
+        android:textSize="19dp"
+        android:textStyle="bold"
+        android:layout_gravity="center"
+        android:id="@+id/toolbar_title" />
+</androidx.appcompat.widget.Toolbar>
 </androidx.constraintlayout.widget.ConstraintLayout>
