@@ -2,15 +2,12 @@ package com.zam.photos
 
 import android.content.Intent
 import android.os.Bundle
-import android.provider.AlarmClock.EXTRA_MESSAGE
 import androidx.appcompat.app.AppCompatActivity
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.Response
 import com.android.volley.toolbox.JsonObjectRequest
 import kotlinx.android.synthetic.main.activity_login.*
-import kotlinx.android.synthetic.main.activity_main.btn
-import kotlinx.android.synthetic.main.activity_main.textView
 import org.json.JSONObject
 
 
@@ -21,15 +18,6 @@ class LoginActivity : AppCompatActivity()  {
             setContentView(R.layout.activity_login)
 
         val database = Database(this)
-
-        btnCheck.setOnClickListener {
-            val users = database.getUsersCount()
-            textView.text = users.toString()
-        }
-
-        btnClean.setOnClickListener {
-            database.cleanUser()
-        }
 
         btn.setOnClickListener {
             val url = "http://91.160.165.231/userLogin.php"
@@ -56,10 +44,9 @@ class LoginActivity : AppCompatActivity()  {
                             val pic = response["pic"].toString()
                             database.createUser(User(pseudo,email,pic))
                             textView.text = "Ajouté en bdd"
-                            val intent = Intent(this, ProfileActivity::class.java).apply {
-                                putExtra(EXTRA_MESSAGE, "blabla")
-                            }
+                            val intent = Intent(this, ProfileActivity::class.java)
                             startActivity(intent)
+                            finish()
                         }
 
 
