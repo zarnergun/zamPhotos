@@ -8,6 +8,7 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.squareup.picasso.Picasso
@@ -44,14 +45,12 @@ class ProfileActivity : AppCompatActivity() {
 
         Log.i("appel", pic)
         profile_pseudo.text = email
-        Picasso.get().load("http://91.160.165.231/images/profil/" + pic + ".jpg")
-            .into(profile_image)
+        val user = FirebaseAuth.getInstance().currentUser
+        Picasso.get().load(user?.photoUrl).into(profile_image)
 
         button2.setOnClickListener {
-            database.cleanUser()
-            val intent = Intent(this, MainActivity::class.java)
-            startActivity(intent)
-            finish()
+            startActivity(LoginFirebaseActivity.getLaunchIntent(this))
+            FirebaseAuth.getInstance().signOut();
         }
 
         // CALL GALLERY PICK
