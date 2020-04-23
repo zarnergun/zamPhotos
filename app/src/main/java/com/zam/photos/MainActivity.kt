@@ -10,9 +10,12 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.iid.FirebaseInstanceId
@@ -25,6 +28,7 @@ class MainActivity : AppCompatActivity() {
 
     private val RC_SIGN_IN = 9001
     private var name = ""
+
 
     companion object {
         private val TAG = "MainActivity"
@@ -56,10 +60,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    @SuppressLint("StringFormatInvalid")
+    @SuppressLint("StringFormatInvalid", "WrongConstant")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
+
+        //        Initializing the type of layout, here I have used LinearLayoutManager you can try GridLayoutManager
+//        Based on your requirement to allow vertical or horizontal scroll , you can change it in  LinearLayout.VERTICAL
+        recyclerView.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
+//        Create an arraylist
+        val dataList = ArrayList<Model>()
+        dataList.add(Model("Phone", 1))
+        dataList.add(Model("Watch", 2))
+        dataList.add(Model("Note", 3))
+        dataList.add(Model("Pin", 4))
+//        pass the values to RvAdapter
+        val rvAdapter = RvAdapter(dataList)
+//        set the recyclerView to the adapter
+        recyclerView.adapter = rvAdapter;
 
         var toolbar: Toolbar = findViewById<Toolbar>(R.id.toolbar)
 
