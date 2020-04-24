@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="256dp">
+
+    <TextView
+        android:id="@+id/text_expand"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="35"
+        android:textSize="11dp"
+        android:text="@string/this_is_a_custom_notification"
+        android:textAlignment="center"
+        android:padding="8dp"
+        style="@style/TextAppearance.Compat.Notification"
+        android:theme="@style/Theme.Transparent"
+        android:textColor="@color/colorPrimary" />
+
+    <ImageView
+        android:id="@+id/image_expand"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="65"
+        android:src="@drawable/common_google_signin_btn_text_dark"
+        android:scaleType="center" />
+
+
+</LinearLayout>
