@@ -19,26 +19,25 @@ import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.LinearLayout
 import android.widget.RemoteViews
-import android.widget.Toast
-import com.google.android.gms.tasks.OnCompleteListener
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.iid.FirebaseInstanceId
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
-import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity() {
 
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var viewAdapter: RecyclerView.Adapter<*>
+    private lateinit var viewManager: RecyclerView.LayoutManager
     private val RC_SIGN_IN = 9001
     private var name = ""
     private var mRecyclerView: RecyclerView? = null
     private var mAdapter: RecyclerView.Adapter<*>? = null
     var listOfusers: ArrayList<Users> = ArrayList()
 
-
-    companion object {
+        companion object {
         private val TAG = "MainActivity"
         fun getLaunchIntent(from: Context) = Intent(from, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
@@ -81,18 +80,42 @@ class MainActivity : AppCompatActivity() {
             Log.i("DATA_USER : ", user.photoUrl.toString())
 
             //RECYCLERVIEW
-            //adding items in list
-            for (i in 0..4) {
-                val user = Users()
-                user.id = i
-                user.login = "Eyehunt $i"
-                listOfusers!!.add(user)
-            }
-            mRecyclerView = findViewById(R.id.my_recycler_view)
-            var mLayoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-            mRecyclerView!!.layoutManager = mLayoutManager
-            mAdapter = Myadapter(listOfusers)
-            mRecyclerView!!.adapter = mAdapter
+
+            var country_list = arrayOf<String>("Afghanistan","Albania","Algeria","Andorra","Angola",
+                "Anguilla","Antigua & Barbuda","Argentina","Armenia","Aruba","Australia","Austria",
+                "Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize",
+                "Benin","Bermuda","Bhutan","Bolivia","Bosnia &amp; Herzegovina","Botswana","Brazil",
+                "British Virgin Islands","Brunei","Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon",
+                "Cape Verde","Cayman Islands","Chad","Chile","China","Colombia","Congo","Cook Islands",
+                "Costa Rica","Cote D Ivoire","Croatia","Cruise Ship","Cuba","Cyprus","Czech Republic",
+                "Denmark","Djibouti","Dominica","Dominican Republic", "Ecuador","Egypt","El Salvador",
+                "Equatorial Guinea","Estonia","Ethiopia","Falkland Islands","Faroe Islands","Fiji","Finland",
+                "France","French Polynesia","French West Indies","Gabon","Gambia","Georgia","Germany",
+                "Ghana","Gibraltar","Greece","Greenland", "Grenada","Guam","Guatemala","Guernsey","Guinea",
+                "Guinea Bissau","Guyana","Haiti","Honduras","Hong Kong","Hungary","Iceland",
+                "India","Indonesia","Iran","Iraq","Ireland","Isle of Man","Israel","Italy","Jamaica",
+                "Japan","Jersey","Jordan","Kazakhstan", "Kenya","Kuwait","Kyrgyz Republic","Laos","Latvia",
+                "Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Macau",
+                "Macedonia","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Mauritania",
+                "Mauritius","Mexico","Moldova","Monaco", "Mongolia","Montenegro","Montserrat","Morocco",
+                "Mozambique","Namibia","Nepal","Netherlands","Netherlands Antilles","New Caledonia",
+                "New Zealand","Nicaragua","Niger","Nigeria","Norway","Oman","Pakistan","Palestine",
+                "Panama","Papua New Guinea","Paraguay","Peru","Philippines","Poland","Portugal",
+                "Puerto Rico","Qatar","Reunion","Romania","Russia","Rwanda","Saint Pierre & Miquelon",
+                "Samoa","San Marino","Satellite","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone",
+                "Singapore","Slovakia","Slovenia","South Africa", "South Korea","Spain","Sri Lanka",
+                "St Kitts & Nevis", "St Lucia","St Vincent","St. Lucia","Sudan","Suriname","Swaziland",
+                "Sweden", "Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Timor L'Este",
+                "Togo","Tonga","Trinidad &amp; Tobago","Tunisia","Turkey", "Turkmenistan","Turks & Caicos",
+                "Uganda","Ukraine","United Arab Emirates","United Kingdom","Uruguay","Uzbekistan","Venezuela",
+                "Vietnam","Virgin Islands (US)","Yemen","Zambia","Zimbabwe")
+
+            val adapter = CountryAdapter(country_list)
+
+            val recyclerView = findViewById(R.id.countriesRecyclerView) as RecyclerView
+            recyclerView.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
+            recyclerView.adapter = adapter
+
             //-------------------------------
 
             val pic = Picasso.get().load(user.photoUrl).into(mTarget)
@@ -102,35 +125,33 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false);
 
-        subscribeButton.setOnClickListener {
-            val messageLong = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-            val messageCourt = "Lorem Ipsum is simply dummy "
-            val image = "https://www.site-libertin.com/wp-content/uploads/2017/08/gorge-profonde-suce.jpg"
-            sendNotif(messageCourt, getBitmap(image).execute().get())
-        }
-
-
-        logTokenButton.setOnClickListener {
-            FirebaseInstanceId.getInstance().instanceId
-                .addOnCompleteListener(OnCompleteListener { task ->
-                    if (!task.isSuccessful) {
-                        Log.w(TAG, "getInstanceId failed", task.exception)
-                        return@OnCompleteListener
-                    }
-
-                    // Get new Instance ID token
-                    val token = task.result?.token
-
-                    // Log and toast
-                    val msg = getString(R.string.msg_token_fmt, token)
-                    Log.i("BLABLA", token)
-                    Log.d(TAG, msg)
-                    Toast.makeText(baseContext, token, Toast.LENGTH_SHORT).show()
-                })
-
-        }
-
-
+//        subscribeButton.setOnClickListener {
+//            val messageLong = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+//            val messageCourt = "Lorem Ipsum is simply dummy "
+//            val image = "https://www.site-libertin.com/wp-content/uploads/2017/08/gorge-profonde-suce.jpg"
+//            sendNotif(messageCourt, getBitmap(image).execute().get())
+//        }
+//
+//
+//        logTokenButton.setOnClickListener {
+//            FirebaseInstanceId.getInstance().instanceId
+//                .addOnCompleteListener(OnCompleteListener { task ->
+//                    if (!task.isSuccessful) {
+//                        Log.w(TAG, "getInstanceId failed", task.exception)
+//                        return@OnCompleteListener
+//                    }
+//
+//                    // Get new Instance ID token
+//                    val token = task.result?.token
+//
+//                    // Log and toast
+//                    val msg = getString(R.string.msg_token_fmt, token)
+//                    Log.i("BLABLA", token)
+//                    Log.d(TAG, msg)
+//                    Toast.makeText(baseContext, token, Toast.LENGTH_SHORT).show()
+//                })
+//
+//        }
 
     }
 
