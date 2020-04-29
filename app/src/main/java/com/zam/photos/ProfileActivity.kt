@@ -5,9 +5,9 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.Toolbar
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
@@ -27,38 +27,22 @@ class ProfileActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_profil)
 
-        // get the Firebase  storage reference
-        firebaseStorage = FirebaseStorage.getInstance().getReference()
-
+        // TOOLBAR -----------------------------------
         var toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
         supportActionBar?.setDisplayShowTitleEnabled(false);
-
         toolbar.setNavigationOnClickListener { finish() }
+        // ---------------------------------------------
 
-        val database = Database(this)
-        val store = Storage(this)
-        var email = store.readString("email")
-        pic = store.readString("pic").toString()
-
-        Log.i("appel", pic)
-        profile_pseudo.text = email
+        firebaseStorage = FirebaseStorage.getInstance().getReference()
         val user = FirebaseAuth.getInstance().currentUser
         Picasso.get().load(user?.photoUrl).into(profile_image)
 
-        button2.setOnClickListener {
-            startActivity(LoginFirebaseActivity.getLaunchIntent(this))
-            FirebaseAuth.getInstance().signOut();
-        }
-
-        // CALL GALLERY PICK
         profile_image.setOnClickListener {
             ImagePicker(pic);
         }
-        // -------
-
     }
 
     private fun ImagePicker(pic: String) {
