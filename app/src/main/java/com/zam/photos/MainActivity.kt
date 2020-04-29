@@ -21,16 +21,20 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.LinearLayout
 import android.widget.RemoteViews
+import android.widget.Toast
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(),OnItemClickListener {
 
-    private val RC_SIGN_IN = 9001
     private var name = ""
-    private var mRecyclerView: RecyclerView? = null
-    private var mAdapter: RecyclerView.Adapter<*>? = null
-    var listOfusers: ArrayList<Users> = ArrayList()
+    var country_list = ArrayList<Model>()
+
+    override fun onItemClicked(infos: Model) {
+        Toast.makeText(this,"User name ${infos.texte} \n Phone:${infos.photo}",Toast.LENGTH_LONG)
+            .show()
+        Log.i("CLick", infos.texte)
+    }
 
     @SuppressLint("StringFormatInvalid")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,15 +46,13 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayShowTitleEnabled(false);
 
-        var country_list = ArrayList<Model>()
-
         country_list.add(Model("jaune", "https://images.pexels.com/photos/1363876/pexels-photo-1363876.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"))
         country_list.add(Model("rouge", "https://www.declenchermalin.com/wp-content/uploads/2018/03/stage-photo-paris-texte-image.jpg"))
         country_list.add(Model("vert", "https://images.pexels.com/photos/1363876/pexels-photo-1363876.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"))
         country_list.add(Model("orange", "https://images.pexels.com/photos/1363876/pexels-photo-1363876.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"))
 
 
-        val adapter = CountryAdapter(country_list)
+        val adapter = CountryAdapter(country_list, this)
 
         val recyclerView = findViewById(R.id.countriesRecyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)

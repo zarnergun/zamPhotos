@@ -1,23 +1,33 @@
 package com.zam.photos
 
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 
-class CountryAdapter(val countries: ArrayList<Model>)
+class CountryAdapter(val countries: ArrayList<Model>, val itemClickListener: OnItemClickListener)
     : RecyclerView.Adapter<CountryAdapter.ViewHolder>() {
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bindItem(titre: String, url: String) {
+        fun bindItem(
+            cardInfos: Model,
+            clickListener: OnItemClickListener
+        ) {
             val imageCardView = itemView.findViewById(R.id.fond_cardview_image) as ImageView
             val nameTextView = itemView.findViewById(R.id.texte_cardview) as TextView
 
-            imageCardView.setImageBitmap(getBitmap(url).execute().get())
+            imageCardView.setImageBitmap(getBitmap(cardInfos.photo).execute().get())
 
-            nameTextView.text = titre
+            itemView.setOnClickListener {
+                clickListener.onItemClicked(cardInfos)
+                Log.w("click", "click listeer on holder")
+            }
+
+
+            nameTextView.text = cardInfos.texte
         }
     }
 
@@ -29,7 +39,7 @@ class CountryAdapter(val countries: ArrayList<Model>)
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val country = countries[position]
-        holder.bindItem(country.texte, country.photo)
+        holder.bindItem(country, itemClickListener)
     }
 
     override fun getItemCount(): Int {
@@ -38,3 +48,6 @@ class CountryAdapter(val countries: ArrayList<Model>)
 
 }
 
+interface OnItemClickListener{
+    fun onItemClicked(infos: Model)
+}

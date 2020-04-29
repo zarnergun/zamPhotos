@@ -13,6 +13,6 @@ class photoFragment: Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        return inflater.inflate(R.layout.photo_zoom_layout)
+        return inflater.inflate(R.layout.photo_zoom_layout, container, false)
     }
 }
