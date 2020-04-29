@@ -1,3 +1,3 @@
 package com.zam.photos
 
-data class Model(val name: String = "", val count: Int = 0)
+data class Model(val texte: String, val photo: String)

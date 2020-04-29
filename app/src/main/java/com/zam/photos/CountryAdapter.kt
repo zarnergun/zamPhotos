@@ -7,16 +7,17 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 
-class CountryAdapter(val countries: Array<String>)
+class CountryAdapter(val countries: ArrayList<Model>)
     : RecyclerView.Adapter<CountryAdapter.ViewHolder>() {
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bindItem(country: String) {
-            val iconImageView = itemView.findViewById(R.id.icon) as ImageView
-            val nameTextView = itemView.findViewById(R.id.name) as TextView
+        fun bindItem(titre: String, url: String) {
+            val imageCardView = itemView.findViewById(R.id.fond_cardview_image) as ImageView
+            val nameTextView = itemView.findViewById(R.id.texte_cardview) as TextView
 
-            iconImageView.setImageResource(R.mipmap.ic_launcher_round)
-            nameTextView.text = country
+            imageCardView.setImageBitmap(getBitmap(url).execute().get())
+
+            nameTextView.text = titre
         }
     }
 
@@ -28,7 +29,7 @@ class CountryAdapter(val countries: Array<String>)
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val country = countries[position]
-        holder.bindItem(country)
+        holder.bindItem(country.texte, country.photo)
     }
 
     override fun getItemCount(): Int {
