@@ -52,7 +52,7 @@ class MainActivity : AppCompatActivity(),OnItemClickListener {
         country_list.add(Model("orange", "https://images.pexels.com/photos/1363876/pexels-photo-1363876.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940"))
 
 
-        val adapter = CountryAdapter(country_list, this)
+        val adapter = CountryAdapter(country_list)
 
         val recyclerView = findViewById(R.id.countriesRecyclerView) as RecyclerView
         recyclerView.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
