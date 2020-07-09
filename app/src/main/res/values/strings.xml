@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">zamPhotos</string>
+    <string name="app_name">Photos de famille</string>
     <string name="welcome_message"> Hello World to !</string>
     <string name="title_activity_maps">Map</string>
     <string name="congrats_text" />
@@ -14,4 +14,5 @@
     <string name="channel_description" />
     <string name="notification_title" />
     <string name="this_is_a_custom_notification">This is a custom notification</string>
+    <string name="add_comment">Ajouter commentaire</string>
 </resources>
