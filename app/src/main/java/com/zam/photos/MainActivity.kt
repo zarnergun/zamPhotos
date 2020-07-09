@@ -1,137 +1,253 @@
 package com.zam.photos
 
+import android.Manifest
 import android.annotation.SuppressLint
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
+import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
+import android.graphics.BitmapFactory
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.support.v4.app.NotificationCompat
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.Toolbar
+import android.os.Parcelable
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.EditText
 import android.widget.RemoteViews
 import android.widget.Toast
-import com.google.android.gms.tasks.OnCompleteListener
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.azoft.carousellayoutmanager.CarouselLayoutManager
+import com.azoft.carousellayoutmanager.CarouselZoomPostLayoutListener
+import com.github.dhaval2404.imagepicker.ImagePicker
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.iid.FirebaseInstanceId
-import com.squareup.picasso.Picasso
-import com.squareup.picasso.Target
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.zam.photos.activities.LoginFirebaseActivity
+import com.zam.photos.activities.ProfileActivity
+import com.zam.photos.adapters.AdapterCardView
+import com.zam.photos.models.Model_cardView
+import com.zam.photos.tools.InternalStorageProvider
+import com.zam.photos.tools.getBitmap
 import kotlinx.android.synthetic.main.activity_main.*
-
+import java.io.File
+import java.time.LocalDate
 
 class MainActivity : AppCompatActivity() {
 
-    private val RC_SIGN_IN = 9001
-    private var name = ""
-    private var mRecyclerView: RecyclerView? = null
-    private var mAdapter: RecyclerView.Adapter<*>? = null
-    var listOfusers: ArrayList<Users> = ArrayList()
+    private lateinit var auth: FirebaseAuth
+    private var ListCardView = ArrayList<Model_cardView>()
+    private var user: FirebaseUser? = FirebaseAuth.getInstance().currentUser
+    private val db = Firebase.firestore
+    private val adapter = AdapterCardView(ListCardView, this)
+    private var storage: FirebaseStorage? = null
+//    var lastFirstVisiblePosition = 0
+    private lateinit var recyclerView: RecyclerView
+    private var recylerViewState: Parcelable? = null
+    private val CAMERA_PERMISSION_CODE = 100
+    private val STORAGE_PERMISSION_CODE = 101
 
 
-    companion object {
-        private val TAG = "MainActivity"
-        fun getLaunchIntent(from: Context) = Intent(from, MainActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (user == null) {
+            val intent = Intent(this, LoginFirebaseActivity::class.java)
+            Toast.makeText(this, "Merci de bien vouloir vous connectez pour utiliser l'application", Toast.LENGTH_LONG).show()
+            startActivity(intent)
+        }
+        if (resultCode == Activity.RESULT_OK) {
+            // CONVERT FILE FROM IMAGEPICKER TO BITMAP
+            val bitmap: Bitmap = BitmapFactory.decodeFile(ImagePicker.getFile(data)?.path)
+            val urlOfImage: String = ImagePicker.getFile(data)?.path.toString()
+            val nameOfImage = ImagePicker.getFile(data)?.name.toString()
+            InternalStorageProvider(this).saveBitmap(bitmap, nameOfImage)
+
+            // DIALOG POUR DEMANDER LE NOM DE LA PHOTO
+            val taskEditText = EditText(this)
+            val dialog: AlertDialog = AlertDialog.Builder(this)
+                .setTitle("Titre de la photo")
+                .setView(taskEditText)
+                .setPositiveButton("Add"
+                ) { _, _ ->  addItemInListAndUpload(
+                    taskEditText.text.toString(),
+                    nameOfImage,
+                    urlOfImage
+                )
+                }
+                .create()
+            dialog.show()
+            // ----------------------------------------
+        } else if (resultCode == ImagePicker.RESULT_ERROR) {
+            Toast.makeText(this, ImagePicker.getError(data), Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(this, "Task Cancelled", Toast.LENGTH_SHORT).show()
         }
     }
 
-    val mTarget: Target = object : Target {
-        override fun onBitmapLoaded(bitmap: Bitmap?, loadedFrom: Picasso.LoadedFrom?) {
-            Log.d("DEBUG", "onBitmapLoaded")
-            val mBitmapDrawable = BitmapDrawable(resources, bitmap)
-            //                                mBitmapDrawable.setBounds(0,0,24,24);
-            // setting icon of Menu Item or Navigation View's Menu Item
-            val toolbar: Toolbar = findViewById<Toolbar>(R.id.toolbar)
-            var menu = toolbar.menu
-            var item = menu.findItem(R.id.goToLogin)
-            item?.setIcon(mBitmapDrawable)
-            setSupportActionBar(toolbar)
-            supportActionBar?.setDisplayShowTitleEnabled(false);
-        }
+    private fun addItemInListAndUpload(
+        textImage: String,
+        nameOfImage: String,
+        urlOfImage: String
+    ) {
+        ListCardView.add(Model_cardView(textImage, nameOfImage))
+        // ADD IMAGE INFOS TO DATABASE
 
-        override fun onPrepareLoad(drawable: Drawable?) {
-            Log.d("DEBUG", "onPrepareLoad")
-        }
+        val imageInfos = hashMapOf(
+            "creator" to user?.email,
+            "autoriseUser" to "Los Angeles",
+            "dateCreated" to LocalDate.now().toString(),
+            "message" to textImage,
+            "title" to textImage,
+            "url" to nameOfImage
+        )
 
-        override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
-            TODO("Not yet implemented")
+        db.collection("Photos").document(nameOfImage)
+            .set(imageInfos)
+            .addOnSuccessListener { Log.d(TAG, "DocumentSnapshot successfully written!") }
+            .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
+
+        // ----------------------------------------
+
+        // ADD IMAGE TO STORAGE
+
+        storage = FirebaseStorage.getInstance()
+        val storageRef = storage?.reference
+        val fileRef = storageRef?.child("uploads/$nameOfImage")
+        Log.e("riversRef : ", fileRef.toString())
+
+        val file = Uri.fromFile(File(urlOfImage))
+        val uploadTask = fileRef?.putFile(file)
+        Log.e("it : ", "avant upload")
+        if (uploadTask != null) {
+            uploadTask.addOnFailureListener {
+                Toast.makeText(this, "Erreur", Toast.LENGTH_LONG).show()
+            }.addOnSuccessListener {
+                Toast.makeText(this, "Photo ajoutée", Toast.LENGTH_LONG).show()
+                refreshData()
+            }
         }
+        Log.e("it : ", "après upload")
+
+        // --------------------------------------
     }
 
-    @SuppressLint("StringFormatInvalid", "WrongConstant")
+    @SuppressLint("StringFormatInvalid")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        var toolbar: Toolbar = findViewById<Toolbar>(R.id.toolbar)
+        if (user == null) {
+            val intent = Intent(this, LoginFirebaseActivity::class.java)
+            Toast.makeText(this, "Merci de bien vouloir vous connectez pour utiliser l'application", Toast.LENGTH_LONG).show()
+            startActivity(intent)
+        }
 
-        val user = FirebaseAuth.getInstance().currentUser
+        toolbar().getToolbar(this)
 
-        if (user != null) {
-            Log.i("DATA_USER : ", user.photoUrl.toString())
+//        var toolbar: Toolbar = findViewById<Toolbar>(R.id.toolbar)
+//        toolbar.setBackgroundResource(R.drawable.gradient_toolbar)
+//
+//        setSupportActionBar(toolbar)
+//        supportActionBar?.setDisplayShowTitleEnabled(false);
+//        supportActionBar?.setCustomView(R.layout.custom_action_bar_layout)
 
-            //RECYCLERVIEW
-            //adding items in list
-            for (i in 0..4) {
-                val user = Users()
-                user.id = i
-                user.login = "Eyehunt $i"
-                listOfusers!!.add(user)
+
+        swipeRefresh.setOnRefreshListener {
+            getPhotosInDatabase()
+        }
+
+
+//        logTokenButton.setOnClickListener {
+//            FirebaseInstanceId.getInstance().instanceId
+//                .addOnCompleteListener(OnCompleteListener { task ->
+//                    if (!task.isSuccessful) {
+//                        Log.w(TAG, "getInstanceId failed", task.exception)
+//                        return@OnCompleteListener
+//                    }
+//
+//                    // Get new Instance ID token
+//                    val token = task.result?.token
+//
+//                    // Log and toast
+//                    val msg = getString(R.string.msg_token_fmt, token)
+//                    Log.i("BLABLA", token)
+//                    Log.d(TAG, msg)
+//                    Toast.makeText(baseContext, token, Toast.LENGTH_SHORT).show()
+//                })
+//
+//        }
+
+    }
+
+
+    override fun onResume() {
+        super.onResume()
+        getPhotosInDatabase()
+        user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            val intent = Intent(this, LoginFirebaseActivity::class.java)
+            Toast.makeText(this, "Merci de bien vouloir vous connectez pour utiliser l'application", Toast.LENGTH_LONG).show()
+            startActivity(intent)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        recylerViewState = recyclerView.layoutManager!!.onSaveInstanceState()!!
+        Log.i("info",  recylerViewState.toString())
+    }
+
+    fun refreshData() {
+        Log.i("ListCardView", "Refresh "+ListCardView.toString() )
+        val layoutManager = CarouselLayoutManager(CarouselLayoutManager.VERTICAL, false)
+        layoutManager.setPostLayoutListener(CarouselZoomPostLayoutListener())
+        recyclerView = findViewById(R.id.main_photosRecyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.hasFixedSize()
+        recyclerView.adapter = adapter
+        if(recylerViewState != null) {
+            recyclerView.getLayoutManager()?.onRestoreInstanceState(recylerViewState);
+        }
+        else {
+            recylerViewState = recyclerView.layoutManager!!.onSaveInstanceState()!!
+        }
+        // Hide swipe to refresh icon animation
+        swipeRefresh.isRefreshing = false
+    }
+
+    fun getPhotosInDatabase() {
+        ListCardView.clear()
+        Log.i("ListCardView", ListCardView.toString() )
+        db.collection("Photos").get()
+            .addOnSuccessListener { documents ->
+                for (document in documents) {
+                    Log.d("DOCUMENT", "${document.id} => ${document.data["url"]}")
+                    ListCardView.add(Model_cardView(document.data["title"].toString(), document.data["url"].toString()))
+                }
+                Log.i("ListCardView", ListCardView.toString() )
+                refreshData()
             }
-            mRecyclerView = findViewById(R.id.my_recycler_view)
-            var mLayoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-            mRecyclerView!!.layoutManager = mLayoutManager
-            mAdapter = Myadapter(listOfusers)
-            mRecyclerView!!.adapter = mAdapter
-            //-------------------------------
+            .addOnFailureListener { exception ->
+                Log.w("DOCUMENT", "Error getting documents: ", exception)
+                refreshData()
+            }
 
-            val pic = Picasso.get().load(user.photoUrl).into(mTarget)
-            name = user.email.toString()
+    }
+
+    companion object {
+        val TAG = "MainActivity"
+        fun getLaunchIntent(from: Context) = Intent(from, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         }
-
-        setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayShowTitleEnabled(false);
-
-        subscribeButton.setOnClickListener {
-            val messageLong = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
-            val messageCourt = "Lorem Ipsum is simply dummy "
-            val image = "https://www.site-libertin.com/wp-content/uploads/2017/08/gorge-profonde-suce.jpg"
-            sendNotif(messageCourt, getBitmap(image).execute().get())
-        }
-
-
-        logTokenButton.setOnClickListener {
-            FirebaseInstanceId.getInstance().instanceId
-                .addOnCompleteListener(OnCompleteListener { task ->
-                    if (!task.isSuccessful) {
-                        Log.w(TAG, "getInstanceId failed", task.exception)
-                        return@OnCompleteListener
-                    }
-
-                    // Get new Instance ID token
-                    val token = task.result?.token
-
-                    // Log and toast
-                    val msg = getString(R.string.msg_token_fmt, token)
-                    Log.i("BLABLA", token)
-                    Log.d(TAG, msg)
-                    Toast.makeText(baseContext, token, Toast.LENGTH_SHORT).show()
-                })
-
-        }
-
-
-
     }
 
     private fun sendNotif(messageBody: String, icon: Bitmap?) {
@@ -201,21 +317,60 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
+    fun checkPermission(permission: String, requestCode: Int) {
+
+        // Checking if permission is not granted
+        if (ContextCompat.checkSelfPermission(
+                this@MainActivity,
+                permission
+            )
+            == PackageManager.PERMISSION_DENIED
+        ) {
+            ActivityCompat
+                .requestPermissions(
+                    this@MainActivity, arrayOf(permission),
+                    requestCode
+                )
+        } else {
+            Toast
+                .makeText(
+                    this@MainActivity,
+                    "Permission already granted",
+                    Toast.LENGTH_SHORT
+                )
+                .show()
+        }
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId) {
             R.id.goToLogin -> {
-               if (name != "") {
-                   val intent = Intent(this, ProfileActivity::class.java)
-                   startActivity(intent)
-                }
-                else {
+                if (user != null) {
+                    val intent = Intent(this, ProfileActivity::class.java)
+                    startActivity(intent)
+                } else {
                     val intent = Intent(this, LoginFirebaseActivity::class.java)
                     startActivity(intent)
                 }
             }
+            R.id.notif -> {
+                val messageLong = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum."
+                val messageCourt = "Lorem Ipsum is simply dummy "
+                val image = "https://helpx.adobe.com/content/dam/help/en/stock/how-to/visual-reverse-image-search/jcr_content/main-pars/image/visual-reverse-image-search-v2_intro.jpg"
+                sendNotif(messageCourt, getBitmap(image).execute().get())
+            }
+            R.id.addPic -> {
+//                val intent = Intent(this, pickImageGallery::class.java)
+//                startActivityForResult(intent,2);
+                checkPermission(Manifest.permission.CAMERA, CAMERA_PERMISSION_CODE)
+                checkPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, STORAGE_PERMISSION_CODE)
+                ImagePicker.with(this)
+                    .crop()	    			//Crop image(Optional), Check Customization for more option
+                    .compress(1024)			//Final image size will be less than 1 MB(Optional)
+                    .maxResultSize(1080, 1080)	//Final image resolution will be less than 1080 x 1080(Optional)
+                    .start()
+            }
         }
         return super.onOptionsItemSelected(item)
     }
-
-
 }
